@@ -1,20 +1,38 @@
-import {Ownable} from  "openzeppelin-contracts/contracts/access/Ownable.sol";
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import { IERC20 } from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import { console } from "forge-std/console.sol";
+import { Ownable } from "openzeppelin-contracts/contracts/access/Ownable.sol";
+
 
 contract BridgeETH is Ownable {
-    constructor() Ownable(message.sender){
-        
+    uint256 public balance;
+    address public tokenAddress;
+
+    event Deposit(address indexed depositor, uint amount);
+
+    mapping(address => uint256) public pendingBalance;
+
+    constructor(address _tokenAddress) Ownable(msg.sender) {
+        tokenAddress = _tokenAddress;
     }
 
-    function Deposite() public{
-        emit sunDeposited(msg.sender, amount);
-
+    function deposit(IERC20 _tokenAddress, uint256 _amount) public {
+        require(address(_tokenAddress) == tokenAddress);
+        require(_tokenAddress.allowance(msg.sender, address(this)) >= _amount);
+        require(_tokenAddress.transferFrom(msg.sender, address(this), _amount));
+        emit Deposit(msg.sender, _amount);
     }
 
-    function unlock () public {
-        
-   }
+    function withdraw(IERC20 _tokenAddress, uint256 _amount) public {
+        require(pendingBalance[msg.sender] >= _amount);
+        pendingBalance[msg.sender] -= _amount;        
+        _tokenAddress.transfer(msg.sender, _amount);
+    }
 
-   function BurnedOnOtherside() public onlyOwner {
- 
-   }
+    function burnedOnOppositeChain(address userAccount, uint256 _amount) public onlyOwner {
+        pendingBalance[userAccount] += _amount;
+    }
 }
