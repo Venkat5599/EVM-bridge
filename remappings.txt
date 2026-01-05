@@ -1,0 +1,2 @@
+openzeppelin-contracts/=lib/openzeppelin-contracts/
+import {Ownable} from  "@openzeppelin/contracts/access/Ownable.sol";
